@@ -71,6 +71,7 @@ grid <- replicate(2, runif(1000, min=-100, max=100));
 dataPoints.x <- grid[,1];
 dataPoints.y <- grid[,2];
 dataPoints = data.frame(dataPoints.x, dataPoints.y);
+dataPoints.mat = matrix(c(dataPoints.x, dataPoints.y), ncol=2, nrow=length(dataPoints.x));
 
 ye <- goalFunction(dataPoints.x, dataPoints.y);
 panel.real = levelplot( ye~ dataPoints.x* dataPoints.y, contour=TRUE, panel = panel.2dsmoother)
@@ -86,12 +87,16 @@ targetFunction.approximated = NULL;
 if(config$approximation_type != "kriging"){
   
   polyLevel <- config$polyLevel;
-  regressionRelation <- ye ~ 1 + dataPoints.x + I(dataPoints.x^2) + dataPoints.y + I(dataPoints.y^2) + I(dataPoints.x+dataPoints.y)
+  #regressionRelation <- ye ~ poly(dataPoints.mat,degree=polyLevel)
   regressionRelation <- ye ~ poly(dataPoints.x,dataPoints.y,degree=polyLevel)
   
   if( config$approximation_type == "regression_splines"){
     fit <- earth(regressionRelation,pmethod="backward",nprune= config$earth$nprune, nfold=config$earth$nprune);
     predictResults <- predict(fit)
+    targetFunction.approximated <- function(df){
+      testInput <- poly(as.matrix(df), degree=polyLevel);
+      predict(fit, as.matrix(testInput))
+    }
     
   } else 
     if( config$approximation_type == "polynomial"){
@@ -232,7 +237,7 @@ GA <- my_ga(
     gaMonitor(x)
     
   },
-  crossover = my_crossover_internal
+  #crossover = my_crossover_internal
 )
 
 
