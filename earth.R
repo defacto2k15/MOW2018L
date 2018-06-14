@@ -60,15 +60,16 @@ panel.real = levelplot( ye~ dataPoints.x* dataPoints.y, contour=TRUE, panel = pa
 
 if(config$approximation_type != "kriging"){
   
-  polyLevel <- config$polyLevel;
-  regressionRelation <- ye ~ poly(dataPoints.x,dataPoints.y,degree=polyLevel)
+  polyLevel <- 1;
+  regressionRelation <- ye ~ dataPoints.x + dataPoints.y;
+  dp <- poly(dataPoints.x,dataPoints.y,degree=polyLevel);
   
   if( config$approximation_type == "regression_splines"){
     fit <- earth(regressionRelation, pmethod="backward",nprune= config$earth$nprune, nfold=config$earth$nprune);
     grid <- replicate(2, runif(1000, min=-100, max=100));
     testPoints.x <- grid[,1];
     testPoints.y <- grid[,2];
-    tinput <- poly(testPoints.x,testPoints.y,degree=polyLevel); 
+    tinput <-  data.frame(testPoints.y,degree=polyLevel); 
     predictResults <- predict(fit, as.matrix(tinput));
   } else
     if( config$approximation_type == "polynomial"){
